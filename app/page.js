@@ -7,63 +7,76 @@ import Image from "next/image";
 import { useSession } from "next-auth/react";
 import Login from "@/components/Login";
 import { useState } from "react";
+import { firestore } from "@/firebase";
+import { collection, getDocs, addDoc, serverTimestamp } from "firebase/firestore";
 
 export default function Home() {
   const { data: session } = useSession();
+  if (!session) return <Login />;
+
   const [showCreateModal, updateShowCreateModal] = useState(false);
   const [newDocumentName, updateNewDocumentName] = useState("");
 
-  if (!session) return <Login />;
+  const createNewDocument = async () => {
+    if (newDocumentName === "") return;
 
-  const createNewDocument = () => {
-    console.log("Create New document");
+    const document = {
+      name: newDocumentName,
+      owner: session.user.email,
+      allowed: [session.user.email],
+      timestamp: serverTimestamp(),
+    };
+    await addDoc(collection(firestore, "document"), document);
+
+    // console.log(addedDocument);
+    updateNewDocumentName("");
+    updateShowCreateModal(false);
+
+    // console.log(users);
+    // console.log("Create New document");
   };
 
-  // const modal = (
-  //   <Dialog
-  //     size='sm'
-  //     open={showCreateModal}
-  //     animate={{ mount: false, unmount: false }}
-  //     handler={() => updateShowCreateModal(false)}>
-  //     <DialogBody>
-  //       <input
-  //         value={newDocumentName}
-  //         onChange={(e) => updateNewDocumentName(e.target.value)}
-  //         type='text'
-  //         placeholder='Enter name for new document'
-  //         className='outline-none w-full'
-  //         onKeyDown={(e) => e.key === "Enter" && createNewDocument()}
-  //       />
-  //     </DialogBody>
-  //     <DialogFooter>
-  //       <Button ripple={true} color='blue' type='reset' onClick={() => updateShowCreateModal(false)}>
-  //         Cancel
-  //       </Button>
-
-  //       <Button ripple={true} color='blue' onClick={() => createNewDocument()}>
-  //         Create
-  //       </Button>
-  //     </DialogFooter>
-  //   </Dialog>
-  // );
+  const openModal = () => {
+    const el = document.getElementById("defaultModal");
+    el.ariaHidden = false;
+  };
 
   const modal = (
-    <div className='fixed inset-0 backdrop-blur-sm justify-center items-center bg-black bg-opacity-25'>
-      <div className='w-[300px] z-100'>
-        <div className='bg-white px-3 py-2'>Modal</div>
-        Hello
-      </div>
-    </div>
+    <Dialog
+      size='xs'
+      open={showCreateModal}
+      animate={{ mount: { tranision: 0 }, unmount: { tranision: 0 } }}
+      handler={() => updateShowCreateModal(false)}>
+      <DialogBody className='pb-0'>
+        <input
+          value={newDocumentName}
+          onChange={(e) => updateNewDocumentName(e.target.value)}
+          type='text'
+          placeholder='Enter name for new document'
+          className='outline-none w-full'
+          onKeyDown={(e) => e.key === "Enter" && createNewDocument()}
+        />
+      </DialogBody>
+      <DialogFooter className='pt-2'>
+        <Button
+          className='mr-2 p-2 border-0'
+          ripple={true}
+          color='blue'
+          variant='outlined'
+          onClick={() => updateShowCreateModal(false)}>
+          Cancel
+        </Button>
+
+        <Button className='p-2' ripple={true} color='blue' onClick={() => createNewDocument()}>
+          Create
+        </Button>
+      </DialogFooter>
+    </Dialog>
   );
 
   return (
     <>
       <div>
-        <div className='fixed left-1/3 top-1/3 justify-center items-center z-100 bg-black w-[400px] rounded-sm backdrop-blur-sm bg-opacity-25'>
-          <div className='w-[300px]'>
-            <div className='bg-white px-3 py-2'>Modal</div>
-          </div>
-        </div>
         <Header />
         {/* {modal} */}
         <section className='bg-[#F8F9FA] pb-10 px-10'>
@@ -79,8 +92,12 @@ export default function Home() {
               <div className='relative h-32 w-24 md:h-48 md:w-36 border-2 cursor-pointer hover:border-blue-700'>
                 <Image
                   src='/images/docs-blank-googlecolors.png'
-                  layout='fill'
-                  onClick={() => updateShowCreateModal(true)}
+                  // layout='fill'
+                  fill={true}
+                  alt='New Document'
+                  onClick={() => {
+                    updateShowCreateModal(true);
+                  }}
                 />
               </div>
               <p className='ml-2 mt-2 font-semibold text-sm text-gray-700'>Blank</p>
@@ -98,6 +115,7 @@ export default function Home() {
           </div>
         </section>
       </div>
+      {modal}
     </>
   );
 }

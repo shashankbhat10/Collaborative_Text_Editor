@@ -30,7 +30,6 @@ const firebaseConfig = {
 // const app = initializeApp(firebaseConfig);
 
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-// const analytics = getAnalytics(app);
 
 const firestore = getFirestore(app);
 

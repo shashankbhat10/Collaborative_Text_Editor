@@ -33,7 +33,7 @@ function Header() {
 
       <img
         loading='lazy'
-        className='h-10 w-10 md:h-12 md:w-12 rounded-full'
+        className='h-10 w-10 md:h-12 md:w-12 rounded-full hover:cursor-pointer'
         // src='./images/maxresdefault.jpg'
         src={session?.user?.image}
         alt='profile photo'
